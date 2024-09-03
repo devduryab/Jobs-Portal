@@ -1,8 +1,6 @@
-import { User } from "../models/user.model";
+import { User } from "../models/user.model.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-
-
 
 export const register = async (req, res) => {
   try {
@@ -68,7 +66,9 @@ export const login = async (req, res) => {
     const token = await jwt.sign(tokenData, process.env.JWT_SECRET_KEY, {
       expiresIn: "1d",
     });
-    user = {
+    console.log(token);
+    
+    const userData = {
       _id: user._id,
       fullName: user.fullname,
       email: user.email,
@@ -85,7 +85,7 @@ export const login = async (req, res) => {
       })
       .json({
         message: `welcome back ${user.fullname}`,
-        user,
+        user: userData,
         success: true,
       });
   } catch (error) {
@@ -95,11 +95,12 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
+    const { fullname } = req.body;
     return res
       .status(200)
       .cookie("token", "", { maxAge: 0 })
       .json({
-        message: `GoodBye ${user.fullname}`,
+        message: `logged out successfully GoodBye ${fullname || 'user'}`,
         success: true,
       });
   } catch (error) {
@@ -109,38 +110,46 @@ export const logout = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const {fullname, email, phoneNumber, skills, bio} = req.body;
+    const { fullname, email, phoneNumber, skills, bio } = req.body;
     const file = req.file;
-    if(!fullname || !email || !phoneNumber || !bio || !skills) {
-      return res.status(400).json({
-        message: 'All fields are empty',
-        success: false
-      });
+    let skillsArray;
+    if(skills)
+    {
+      skillsArray = skills.split(',');
     }
-    const skillsArray = skills.split(',');
     const userId = req.id;
     let user = await User.findById(userId);
 
-
-    if(!userId)
-    {
+    if (!userId) {
       return res.status(400).json({
         message: "Invalid user",
-        success: false
+        success: false,
       });
-    };
+    }
 
     // updating the user data
-    user.fullname = fullname;
-    user.email = email;
-    user.phoneNumber = phoneNumber;
-    user.profile.bio = bio;
-    user.profile.skills = skillsArray;
+    if(fullname) user.fullname = fullname;
+    if(email) user.email = email;
+    if(phoneNumber) user.phoneNumber = phoneNumber;
+    if(skills) user.skills = skillsArray;
+    if(bio) user.bio = bio;
 
     await user.save();
+    user = {
+      _id: user._id,
+      fullName: user.fullname,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+      profile: user.profile,
+    };
 
+    return res.status(200).json({
+      message: "Profile updated successfully",
+      user,
+      success: true,
+    });
   } catch (error) {
     console.log(error);
-     
   }
 };
