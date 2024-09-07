@@ -7,6 +7,7 @@ import { databaseConnection } from "./utils/database.js";
 import userRouter from "./routes/user.route.js"
 import companyRouter from "./routes/company.router.js"
 import jobRouter from "./routes/job.route.js"
+import applicationRouter from "./routes/application.router.js"
 // import bodyParser from "body-parser";
 
 // config dotenv
@@ -31,7 +32,7 @@ app.use(cors(corsOptions));
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/company", companyRouter);  
 app.use("/api/v1/job", jobRouter)
-
+app.use("/api/v1/application", applicationRouter);
 
 const port = process.env.PORT || process.env.BACKUP_PORT;
 app.listen( port, () => {
